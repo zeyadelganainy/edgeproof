@@ -5,9 +5,11 @@ build/
 .DS_Store
 # Local language-probe scratch
 scratch/
-# CLI runtime logs + local private-state DB
+# CLI runtime logs + local private-state DB (LevelDB) — never commit
 cli/logs/
+cli/midnight-level-db/
 cli/.midnight-level-db/
+**/midnight-level-db/
 # Vercel deploy metadata
 .vercel/
 # Local secrets (testnet wallet seeds) — never commit

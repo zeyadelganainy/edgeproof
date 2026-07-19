@@ -1,8 +1,7 @@
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { PerformanceCard, type CardData } from "./PerformanceCard";
 import { computePreview, parseTrades, type Preview } from "./preview";
-import { readCardAt, readLiveCard } from "./midnight/read";
-import { connectLace, type LaceConnection } from "./midnight/lace";
+import { readLiveCard } from "./midnight/read";
 import { NETWORKS, applyNetwork, type Net } from "./midnight/config";
 
 type Theme = "dark" | "light";
@@ -28,9 +27,6 @@ export function App() {
   const [reading, setReading] = useState(false);
   const [readError, setReadError] = useState<string | null>(null);
   const [live, setLive] = useState(false);
-  const [lace, setLace] = useState<LaceConnection | null>(null);
-  const [laceError, setLaceError] = useState<string | null>(null);
-  const [connecting, setConnecting] = useState(false);
 
   // Check path
   const [preview, setPreview] = useState<(Preview & { fileName: string }) | null>(null);
@@ -41,7 +37,7 @@ export function App() {
   }, [theme]);
 
   // Keep the midnight libraries' global network id in sync with the selected network,
-  // so wallet connect + reads don't hit a network-id mismatch.
+  // so reads don't hit a network-id mismatch.
   useEffect(() => {
     applyNetwork(net);
   }, [net]);
@@ -63,27 +59,13 @@ export function App() {
     setReading(true);
     setReadError(null);
     try {
-      const c = lace
-        ? await readCardAt(lace.indexer, lace.indexerWS, lace.network, contract.trim())
-        : await readLiveCard(net, contract.trim());
+      const c = await readLiveCard(net, contract.trim());
       setCard(c);
       setLive(true);
     } catch (e) {
       setReadError(e instanceof Error ? e.message : String(e));
     } finally {
       setReading(false);
-    }
-  };
-
-  const doConnect = async () => {
-    setConnecting(true);
-    setLaceError(null);
-    try {
-      setLace(await connectLace(NETWORKS[net].networkId));
-    } catch (e) {
-      setLaceError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setConnecting(false);
     }
   };
 
@@ -167,7 +149,6 @@ export function App() {
                 onChange={(e) => {
                   setNet(e.target.value as Net);
                   setReadError(null);
-                  setLaceError(null);
                   setLive(false);
                 }}
               >
@@ -182,16 +163,11 @@ export function App() {
             <button className="btn" type="button" onClick={readLive} disabled={reading || contract.trim().length === 0}>
               {reading ? "Reading…" : "Read from chain"}
             </button>
-            <button className="btn secondary" type="button" onClick={doConnect} disabled={connecting}>
-              {connecting ? "Connecting…" : lace ? "Lace connected" : "Connect Lace"}
-            </button>
           </div>
 
           <div className="controls-status" role="status">
             {live ? <span className="ok">● Live from {card?.network ?? NETWORKS[net].label}</span> : null}
-            {lace ? <span className="ok">● Lace connected · {lace.network}</span> : null}
             {readError ? <span className="err">{readError}</span> : null}
-            {laceError ? <span className="err">{laceError}</span> : null}
           </div>
 
           {card ? (

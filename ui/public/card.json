@@ -1,32 +1,32 @@
 {
   "network": "Standalone",
   "chain": "Midnight",
-  "contract": "496f6a31bd8590c3dabe3796975e4ccfcca0928da0ee3297658f020918b64690",
-  "commitment": "1706d2fc9c51910b4ff59f2a5b3436cfc6cf14d8354783e78f15d9dc3a703592",
-  "dataset": "IMPORTED",
-  "instrument": "GBPUSD · imported · 6 trades",
-  "provenAt": "2026-07-19T07:06:26.177Z",
+  "contract": "e1a07923d31590ebb186c11e3aa78c8a486b2a1f0cbcdd84f92fe2a5ce460948",
+  "commitment": "d2a4c12bc82df07c5fa5e6a56c9be4a8e16040a08cbcb883438909b1a38c32e4",
+  "dataset": "DEMO DATASET",
+  "instrument": "GBPUSD · London 07:00-11:00 UTC · 28 trades",
+  "provenAt": "2026-07-19T11:47:50.349Z",
   "claims": [
     {
       "label": "Net profit & loss is positive",
       "sub": "net ≥ 0",
       "verified": true,
-      "txId": "00bcc1820a1f4d7b1901d825610c7fec6dc89f48fe8773fe24a3ee5e55477f6d90",
-      "block": 125
+      "txId": "00c54a4bbcf46c1b199d003ebbbd57b3a6ab548bb2d314d1838b19abafd879e939",
+      "block": 2939
     },
     {
       "label": "Win rate is at least 50%",
       "sub": "win rate ≥ 50%",
       "verified": true,
-      "txId": "00128d06d356c31857e9fe4a00d7affcfcccc6b7fda045b809d7e17de0bb3c0dd1",
-      "block": 129
+      "txId": "008d75c303006071befdd02def616bbb3b5a5776723e85f129b86c574759b58221",
+      "block": 2943
     },
     {
       "label": "Maximum drawdown within 100 pips",
       "sub": "max drawdown ≤ 100 pips",
       "verified": true,
-      "txId": "002a29b14ffd11edcd3ccf56fdd7cbe9c7f39367ab5f99bf76e8d4f0550e911894",
-      "block": 133
+      "txId": "00605e9cd45a9ce6542efb54b9efcdda15451b6714bfed2d0701e9a5daee5ab8c2",
+      "block": 2947
     }
   ]
 }
