@@ -1,0 +1,306 @@
+<style>
+  @font-face {
+    font-family: "Outfit";
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url("__OUTFIT_WOFF2__") format("woff2");
+  }
+
+  :root {
+    color-scheme: light dark;
+    --bg: #F3F3F6; --surface: #FFFFFF; --elevated: #F1F1F5; --text: #0A0A0A; --body: #33333A; --muted: #6B6B72;
+    --blue: #0000FE; --blue-strong: #0000C4; --blue-line: rgba(0, 0, 254, 0.42); --blue-soft: rgba(0, 0, 254, 0.05);
+    --green: #0B7A38; --green-line: rgba(11, 122, 56, 0.42); --green-soft: rgba(11, 122, 56, 0.07);
+    --border: rgba(10, 10, 10, 0.12); --hair: rgba(10, 10, 10, 0.09); --shadow: 0 24px 60px -34px rgba(0, 0, 40, 0.28);
+    --sans: "Outfit", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", monospace;
+    --r: 14px; --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #060608; --surface: #0E0E13; --elevated: #17171F; --text: #FFFFFF; --body: #C9C9D0; --muted: #8E8E97;
+      --blue: #6E6EFF; --blue-strong: #8C8CFF; --blue-line: rgba(110, 110, 255, 0.42); --blue-soft: rgba(110, 110, 255, 0.09);
+      --green: #46D07E; --green-line: rgba(70, 208, 126, 0.42); --green-soft: rgba(70, 208, 126, 0.10);
+      --border: rgba(255, 255, 255, 0.10); --hair: rgba(255, 255, 255, 0.07); --shadow: 0 30px 80px -34px rgba(0, 0, 0, 0.85);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #060608; --surface: #0E0E13; --elevated: #17171F; --text: #FFFFFF; --body: #C9C9D0; --muted: #8E8E97;
+    --blue: #6E6EFF; --blue-strong: #8C8CFF; --blue-line: rgba(110, 110, 255, 0.42); --blue-soft: rgba(110, 110, 255, 0.09);
+      --green: #46D07E; --green-line: rgba(70, 208, 126, 0.42); --green-soft: rgba(70, 208, 126, 0.10);
+    --border: rgba(255, 255, 255, 0.10); --hair: rgba(255, 255, 255, 0.07); --shadow: 0 30px 80px -34px rgba(0, 0, 0, 0.85);
+  }
+  :root[data-theme="light"] {
+    --bg: #F3F3F6; --surface: #FFFFFF; --elevated: #F1F1F5; --text: #0A0A0A; --body: #33333A; --muted: #6B6B72;
+    --blue: #0000FE; --blue-strong: #0000C4; --blue-line: rgba(0, 0, 254, 0.42); --blue-soft: rgba(0, 0, 254, 0.05);
+    --green: #0B7A38; --green-line: rgba(11, 122, 56, 0.42); --green-soft: rgba(11, 122, 56, 0.07);
+    --border: rgba(10, 10, 10, 0.12); --hair: rgba(10, 10, 10, 0.09); --shadow: 0 24px 60px -34px rgba(0, 0, 40, 0.28);
+  }
+
+  * { box-sizing: border-box; }
+
+  .stage {
+    min-height: 100vh; margin: 0; padding: clamp(16px, 3.5vh, 40px) 20px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    background: radial-gradient(70% 45% at 50% 0%, color-mix(in srgb, var(--blue) 7%, transparent), transparent 70%), var(--bg);
+    color: var(--body); font-family: var(--sans); font-weight: 400; letter-spacing: -0.006em;
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  }
+
+  .statement {
+    width: 100%; max-width: 1060px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); box-shadow: var(--shadow); padding: clamp(22px, 3vw, 34px) clamp(24px, 3.2vw, 40px);
+    position: relative; overflow: hidden; animation: rise 460ms var(--ease) both;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .statement::before {
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
+    background: linear-gradient(90deg, var(--blue), color-mix(in srgb, var(--blue) 40%, transparent) 55%, transparent);
+  }
+
+  .letterhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .mark { font-size: 1.7rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1; color: var(--text); }
+  .mark .dot { color: var(--blue); }
+  .doctype { margin-top: 8px; font-size: 0.625rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.26em; color: var(--muted); }
+
+  .head-right { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px; font-size: 0.6875rem; font-weight: 600; color: var(--text);
+    padding: 6px 12px 6px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--elevated); white-space: nowrap;
+  }
+  .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); }
+  .chip.is-live .dot { background: var(--green); animation: pulse 2.4s var(--ease) infinite; }
+  .chip.is-verified .dot { background: var(--green); }
+  .chip.is-demo { color: var(--muted); }
+  .chip.is-demo .dot { background: transparent; border: 1.5px solid var(--muted); }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--green) 55%, transparent); } 70%, 100% { box-shadow: 0 0 0 6px transparent; } }
+
+  .body {
+    margin-top: clamp(20px, 2.6vw, 28px); display: grid; grid-template-columns: 0.74fr 1.26fr;
+    gap: clamp(24px, 3.2vw, 44px); align-items: stretch;
+  }
+  .col-right { border-left: 1px solid var(--hair); padding-left: clamp(24px, 3.2vw, 44px); }
+
+  .meta { display: grid; gap: 10px; }
+  .row { display: grid; grid-template-columns: 96px 1fr; align-items: baseline; gap: 12px; }
+  .k { font-size: 0.625rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.15em; color: var(--muted); }
+  .v { font-size: 0.8125rem; font-weight: 450; line-height: 1.45; color: var(--body); font-variant-numeric: tabular-nums; }
+  .v .accent { color: var(--blue); font-weight: 600; }
+
+  .copy {
+    font-family: var(--mono); font-size: 0.6875rem; font-weight: 400; color: var(--text); font-variant-numeric: tabular-nums;
+    display: inline-flex; align-items: center; gap: 7px; max-width: 100%; text-align: left;
+    background: transparent; border: 1px solid transparent; border-radius: 6px; margin: -3px -6px; padding: 3px 6px; cursor: pointer;
+    transition: background 140ms var(--ease), border-color 140ms var(--ease);
+  }
+  .copy .txt { overflow-wrap: anywhere; }
+  .copy .ic { flex: none; width: 12px; height: 12px; color: var(--muted); transition: color 140ms var(--ease); }
+  .copy:hover { background: var(--elevated); border-color: var(--border); }
+  .copy:hover .ic { color: var(--blue); }
+  .copy:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .copy .done { display: none; color: var(--blue); font-weight: 600; }
+  .copy[data-state="copied"] .ic { color: var(--blue); }
+  .copy[data-state="copied"] .done { display: inline; }
+
+  /* How to verify */
+  .verify-panel { margin-top: 16px; padding: 13px 15px; border: 1px solid var(--border); border-radius: 10px; background: var(--elevated); }
+  .verify-title { font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.16em; color: var(--muted); margin-bottom: 9px; }
+  .verify-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .verify-steps li { display: flex; gap: 10px; align-items: flex-start; font-size: 0.75rem; line-height: 1.45; color: var(--muted); }
+  .verify-steps b { color: var(--text); font-weight: 600; }
+  .vn {
+    flex: none; width: 17px; height: 17px; border-radius: 50%; border: 1px solid var(--blue-line); color: var(--blue);
+    font-size: 0.625rem; font-weight: 600; display: inline-grid; place-items: center; font-variant-numeric: tabular-nums; margin-top: 1px;
+  }
+
+  /* Claims */
+  .claims-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .claims-title { margin: 0; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2em; color: var(--muted); }
+  .claims-count { font-size: 0.6875rem; font-weight: 600; color: var(--green); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; white-space: nowrap; }
+  .claims ul { list-style: none; margin: 0; padding: 0; }
+  .claim { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 14px; padding: 18px 0; border-bottom: 1px solid var(--hair); }
+  .claim:first-of-type { padding-top: 8px; }
+  .claim:last-child { border-bottom: 0; padding-bottom: 0; }
+  .claim-label { font-size: 1.1875rem; font-weight: 600; line-height: 1.3; color: var(--text); letter-spacing: -0.015em; }
+  .claim-sub { margin-top: 4px; font-family: var(--mono); font-size: 0.6875rem; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* Proof reference — an intentional metadata token */
+  .proofline { margin-top: 11px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .proof-key { font-size: 0.5625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.13em; color: var(--muted); }
+  .proof {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--mono); font-size: 0.6875rem; font-weight: 400; color: var(--text); font-variant-numeric: tabular-nums;
+    padding: 4px 9px; border: 1px solid var(--border); border-radius: 7px; background: var(--elevated); cursor: pointer;
+    transition: border-color 140ms var(--ease), color 140ms var(--ease);
+  }
+  .proof .ic { width: 12px; height: 12px; color: var(--muted); flex: none; transition: color 140ms var(--ease); }
+  .proof:hover { border-color: var(--blue-line); }
+  .proof:hover .ic { color: var(--blue); }
+  .proof:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .proof .done { display: none; color: var(--blue); font-weight: 600; }
+  .proof[data-state="copied"] .ic { color: var(--blue); }
+  .proof[data-state="copied"] .lbl { display: none; }
+  .proof[data-state="copied"] .done { display: inline; }
+  .proof-block { font-size: 0.625rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .seal {
+    flex: none; align-self: center; display: inline-flex; align-items: center; gap: 7px;
+    font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--green);
+    padding: 7px 13px 7px 8px; border: 1px solid var(--green-line); border-radius: 999px; background: var(--green-soft); white-space: nowrap;
+  }
+  .seal .check { display: inline-grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: var(--green); color: var(--surface); font-size: 9.5px; font-weight: 700; line-height: 1; }
+
+  .foot { margin-top: clamp(18px, 2.4vw, 26px); border-top: 1px solid var(--hair); padding-top: 16px; }
+  .assurance { margin: 0; width: 100%; font-size: 0.78125rem; font-weight: 400; line-height: 1.6; color: var(--body); text-wrap: pretty; }
+  .assurance strong { color: var(--text); font-weight: 600; }
+  .fine-print { margin: 9px 0 0; width: 100%; font-size: 0.625rem; font-weight: 400; line-height: 1.5; color: var(--muted); opacity: 0.85; text-wrap: pretty; }
+
+  .caption { font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.13em; text-transform: uppercase; color: var(--muted); opacity: 0.7; }
+
+  @media (max-width: 760px) {
+    .body { grid-template-columns: 1fr; gap: 22px; }
+    .col-right { border-left: 0; padding-left: 0; border-top: 1px solid var(--hair); padding-top: 20px; }
+    .claim { grid-template-columns: 1fr; }
+    .seal { justify-self: start; margin-top: 4px; }
+    .row { grid-template-columns: 92px 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .statement { animation: none; }
+    .chip .dot { animation: none !important; }
+    * { transition-duration: 0.01ms !important; }
+  }
+</style>
+
+<main class="stage">
+  <article class="statement" aria-label="EdgeProof verified performance card">
+    <header class="letterhead">
+      <div class="brand">
+        <div class="mark">EdgeProof<span class="dot">.</span></div>
+        <div class="doctype">Verified Performance Card</div>
+      </div>
+      <div class="head-right">
+        <span class="chip is-verified"><span class="dot" aria-hidden="true"></span>Verified on Midnight</span>
+        <span class="chip is-demo"><span class="dot" aria-hidden="true"></span>Demo dataset</span>
+      </div>
+    </header>
+
+    <div class="body">
+      <div class="col col-left">
+        <section class="meta" aria-label="Attestation details">
+          <div class="row"><span class="k">Instrument</span><span class="v">GBP/USD · London · 28 trades</span></div>
+          <div class="row"><span class="k">Network</span><span class="v">Midnight · <span class="accent">Standalone</span></span></div>
+          <div class="row"><span class="k">Proven</span><span class="v">18 Jul 2026</span></div>
+          <div class="row">
+            <span class="k">Contract</span>
+            <button class="copy" type="button" data-copy="034bd39234393c020f23071ebf7a1e29229fb932867190484b36147741772a51" aria-label="Copy contract address">
+              <span class="txt">034bd392…41772a51</span>
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+              <span class="done">Copied</span>
+            </button>
+          </div>
+          <div class="row">
+            <span class="k">Commitment</span>
+            <button class="copy" type="button" data-copy="d2a4c12bc82df07c5fa5e6a56c9be4a8e16040a08cbcb883438909b1a38c32e4" aria-label="Copy commitment hash">
+              <span class="txt">d2a4c12b…a38c32e4</span>
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+              <span class="done">Copied</span>
+            </button>
+          </div>
+        </section>
+
+        <div class="verify-panel">
+          <div class="verify-title">How to verify</div>
+          <ol class="verify-steps">
+            <li><span class="vn">1</span><span><b>Copy</b> any hash — click a contract, commitment, or proof to put it on your clipboard.</span></li>
+            <li><span class="vn">2</span><span><b>Look it up</b> — paste a proof transaction into the Midnight block explorer to watch it settle.</span></li>
+            <li><span class="vn">3</span><span><b>Confirm</b> — read the contract's ledger to check the commitment binds the log.</span></li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="col col-right">
+        <div class="claims-head">
+          <h2 class="claims-title">Proven in zero-knowledge</h2>
+          <span class="claims-count">3 / 3 verified</span>
+        </div>
+        <ul>
+          <li class="claim">
+            <div class="claim-main">
+              <div class="claim-label">Net profit &amp; loss is positive</div>
+              <div class="claim-sub">net ≥ 0</div>
+              <div class="proofline">
+                <span class="proof-key">Proof</span>
+                <button class="proof" type="button" data-copy="00679825db0fcf9f75d7885019cb498a6f1b6f8f05d130e329404ded7eb1255d20" aria-label="Copy settlement transaction for the net PnL claim">
+                  <span class="lbl">tx 00679825…1255d20</span>
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+                  <span class="done">Copied</span>
+                </button>
+                <span class="proof-block">block 58</span>
+              </div>
+            </div>
+            <div class="seal"><span class="check" aria-hidden="true">✓</span>Verified</div>
+          </li>
+          <li class="claim">
+            <div class="claim-main">
+              <div class="claim-label">Win rate is at least 50%</div>
+              <div class="claim-sub">win rate ≥ 50%</div>
+              <div class="proofline">
+                <span class="proof-key">Proof</span>
+                <button class="proof" type="button" data-copy="00a19d1b31542015b16795f277d462cc5a22761d590d02724b9a6d3f375e561c16" aria-label="Copy settlement transaction for the win rate claim">
+                  <span class="lbl">tx 00a19d1b…5e561c16</span>
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+                  <span class="done">Copied</span>
+                </button>
+                <span class="proof-block">block 62</span>
+              </div>
+            </div>
+            <div class="seal"><span class="check" aria-hidden="true">✓</span>Verified</div>
+          </li>
+          <li class="claim">
+            <div class="claim-main">
+              <div class="claim-label">Maximum drawdown within 100 pips</div>
+              <div class="claim-sub">max drawdown ≤ 100 pips</div>
+              <div class="proofline">
+                <span class="proof-key">Proof</span>
+                <button class="proof" type="button" data-copy="00ac52148a8c9ffcb5db196fb22589688cbd7f457295347e27fb03f5c064e4278f" aria-label="Copy settlement transaction for the max drawdown claim">
+                  <span class="lbl">tx 00ac5214…064e4278f</span>
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+                  <span class="done">Copied</span>
+                </button>
+                <span class="proof-block">block 66</span>
+              </div>
+            </div>
+            <div class="seal"><span class="check" aria-hidden="true">✓</span>Verified</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <footer class="foot">
+      <p class="assurance">
+        Each claim is a zero-knowledge proof settled on Midnight. The trade log never left the trader's machine —
+        <strong>only these claims and a salted commitment are public</strong>, and the same contract mathematically
+        refuses to prove any claim the trades don't support.
+      </p>
+      <p class="fine-print">
+        Synthetic demonstration data, seeded and reproducible, modeled on a real GBP/USD London-session strategy profile.
+        Not investment advice and not a record of actual trading.
+      </p>
+    </footer>
+  </article>
+
+  <div class="caption">EdgeProof · your edge, proven — never exposed</div>
+</main>
+
+<script>
+  document.querySelectorAll("[data-copy]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(btn.getAttribute("data-copy"));
+        btn.dataset.state = "copied";
+        setTimeout(() => { delete btn.dataset.state; }, 1300);
+      } catch (e) { /* clipboard unavailable */ }
+    });
+  });
+</script>

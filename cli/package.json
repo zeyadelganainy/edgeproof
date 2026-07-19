@@ -1,0 +1,17 @@
+{
+  "name": "@edgeproof/cli",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "standalone": "node --max-old-space-size=8192 --no-warnings --experimental-specifier-resolution=node --loader ts-node/esm src/standalone.ts",
+    "standalone-fail": "node --max-old-space-size=8192 --no-warnings --experimental-specifier-resolution=node --loader ts-node/esm src/standalone-fail.ts",
+    "preprod": "node --max-old-space-size=13312 --no-warnings --experimental-specifier-resolution=node --loader ts-node/esm src/preprod.ts",
+    "preprod-ps": "docker compose -f proof-server.yml pull && node --max-old-space-size=8192 --no-warnings --experimental-specifier-resolution=node --loader ts-node/esm src/preprod-start-proof-server.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@edgeproof/contract": "*"
+  }
+}

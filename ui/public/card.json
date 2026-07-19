@@ -1,0 +1,32 @@
+{
+  "network": "Standalone",
+  "chain": "Midnight",
+  "contract": "496f6a31bd8590c3dabe3796975e4ccfcca0928da0ee3297658f020918b64690",
+  "commitment": "1706d2fc9c51910b4ff59f2a5b3436cfc6cf14d8354783e78f15d9dc3a703592",
+  "dataset": "IMPORTED",
+  "instrument": "GBPUSD · imported · 6 trades",
+  "provenAt": "2026-07-19T07:06:26.177Z",
+  "claims": [
+    {
+      "label": "Net profit & loss is positive",
+      "sub": "net ≥ 0",
+      "verified": true,
+      "txId": "00bcc1820a1f4d7b1901d825610c7fec6dc89f48fe8773fe24a3ee5e55477f6d90",
+      "block": 125
+    },
+    {
+      "label": "Win rate is at least 50%",
+      "sub": "win rate ≥ 50%",
+      "verified": true,
+      "txId": "00128d06d356c31857e9fe4a00d7affcfcccc6b7fda045b809d7e17de0bb3c0dd1",
+      "block": 129
+    },
+    {
+      "label": "Maximum drawdown within 100 pips",
+      "sub": "max drawdown ≤ 100 pips",
+      "verified": true,
+      "txId": "002a29b14ffd11edcd3ccf56fdd7cbe9c7f39367ab5f99bf76e8d4f0550e911894",
+      "block": 133
+    }
+  ]
+}

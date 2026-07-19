@@ -1,0 +1,176 @@
+{
+  "compiler-version": "0.30.0",
+  "language-version": "0.22.0",
+  "runtime-version": "0.15.0",
+  "circuits": [
+    {
+      "name": "commit",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "proveNetPnL",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "minNetDeciPips",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 4294967295
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "proveWinRate",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "minWinRatePct",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 4294967295
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "proveMaxDrawdown",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "maxDdDeciPips",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 4294967295
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    }
+  ],
+  "witnesses": [
+    {
+      "name": "tradeLog",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Vector",
+        "length": 32,
+        "type": {
+          "type-name": "Struct",
+          "name": "TradeRecord",
+          "elements": [
+            {
+              "name": "pnlEnc",
+              "type": {
+                "type-name": "Uint",
+                "maxval": 4294967295
+              }
+            },
+            {
+              "name": "valid",
+              "type": {
+                "type-name": "Boolean"
+              }
+            },
+            {
+              "name": "openTime",
+              "type": {
+                "type-name": "Uint",
+                "maxval": 4294967295
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "commitmentSalt",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "equityOff",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Vector",
+        "length": 33,
+        "type": {
+          "type-name": "Uint",
+          "maxval": 18446744073709551615
+        }
+      }
+    },
+    {
+      "name": "cumValid",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Vector",
+        "length": 33,
+        "type": {
+          "type-name": "Uint",
+          "maxval": 18446744073709551615
+        }
+      }
+    },
+    {
+      "name": "cumWins",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Vector",
+        "length": 33,
+        "type": {
+          "type-name": "Uint",
+          "maxval": 18446744073709551615
+        }
+      }
+    },
+    {
+      "name": "peakOff",
+      "arguments": [
+      ],
+      "result type": {
+        "type-name": "Vector",
+        "length": 33,
+        "type": {
+          "type-name": "Uint",
+          "maxval": 18446744073709551615
+        }
+      }
+    }
+  ],
+  "contracts": [
+  ]
+}

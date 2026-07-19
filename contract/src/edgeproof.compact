@@ -1,0 +1,159 @@
+// EdgeProof — zero-knowledge proofs of trading performance claims.
+//
+// Three-layer model:
+//   - The trade log lives in TypeScript private state (witnesses); it never leaves the prover.
+//   - Circuits compute over the log and publish only a salted commitment + proven claims.
+//   - The public ledger stores just those.
+//
+// Compact constraints that shape this design:
+//   - No signed integers -> P&L stored unsigned as deci-pips with a bias: pnlEnc = pnlDeciPips + BIAS.
+//     Equity is carried in an OFFSET-biased running total so it never goes negative.
+//   - No mutable locals / accumulators -> reductions are done by witnessing running prefix arrays
+//     (length 33, index 0 = baseline) and verifying their recurrences in-circuit against the
+//     committed trades. Sound because trades are bound by the commitment and prefixes are checked
+//     against the trades.
+//   - Field has no relational operators -> all comparisons use Uint<64>.
+//
+// Constants kept in sync with contract/src/witnesses.ts and scripts/types.ts:
+//   BIAS = 10000, OFFSET = 100000, deci-pips, N = 32.
+
+pragma language_version >= 0.20;
+
+import CompactStandardLibrary;
+
+// ---- Circuit-facing trade record (the witnessed projection that gets hashed) ----
+struct TradeRecord {
+  pnlEnc: Uint<32>,   // pnlDeciPips + BIAS (unsigned)
+  valid: Boolean,     // true for real trades, false for padding slots
+  openTime: Uint<32>, // unix seconds (0 for padding)
+}
+
+// The exact bytes we hash to bind the private log to the on-chain commitment.
+struct CommitPayload {
+  trades: Vector<32, TradeRecord>,
+  salt: Bytes<32>,
+}
+
+// ---- Public ledger state ----
+export ledger commitment: Bytes<32>;
+export ledger netPnlProven: Boolean;
+export ledger netPnlThresholdDeciPips: Uint<32>;
+export ledger winRateProven: Boolean;
+export ledger winRateThresholdPct: Uint<32>;
+export ledger maxDrawdownProven: Boolean;
+export ledger maxDrawdownThresholdDeciPips: Uint<32>;
+
+constructor() {
+  commitment = default<Bytes<32>>;
+  netPnlProven = false;
+  netPnlThresholdDeciPips = 0;
+  winRateProven = false;
+  winRateThresholdPct = 0;
+  maxDrawdownProven = false;
+  maxDrawdownThresholdDeciPips = 0;
+}
+
+// ---- Private witnesses (supplied from TS private state; never disclosed) ----
+witness tradeLog(): Vector<32, TradeRecord>;
+witness commitmentSalt(): Bytes<32>;
+// Running OFFSET-biased equity curve; length 33, index 0 is the baseline OFFSET.
+witness equityOff(): Vector<33, Uint<64>>;
+// Running counts; length 33, index 0 is the baseline 0.
+witness cumValid(): Vector<33, Uint<64>>;
+witness cumWins(): Vector<33, Uint<64>>;
+// Running OFFSET-biased high-water mark of the equity curve; length 33, index 0 is OFFSET.
+witness peakOff(): Vector<33, Uint<64>>;
+
+// Assert the witnessed log matches the on-chain commitment (binds claims to committed data).
+circuit assertCommitted(trades: Vector<32, TradeRecord>, salt: Bytes<32>): [] {
+  assert(persistentHash<CommitPayload>(CommitPayload { trades: trades, salt: salt }) == commitment,
+         "trade log does not match on-chain commitment");
+}
+
+// Verify the witnessed OFFSET-biased equity curve against the trades, return it.
+// Recurrence (no subtraction/underflow): eoff[i+1] + (valid?BIAS:0) == eoff[i] + (valid?pnlEnc:0)
+circuit verifiedEquity(trades: Vector<32, TradeRecord>): Vector<33, Uint<64>> {
+  const eoff = equityOff();
+  const bias = 10000 as Uint<64>;
+  const offset = 100000 as Uint<64>;
+  assert(eoff[0] == offset, "equity baseline must be OFFSET");
+  for (const i of 0..32) {
+    const enc = trades[i].pnlEnc as Uint<64>;
+    const valid = trades[i].valid;
+    assert(eoff[i + 1] + (valid ? bias : 0) == eoff[i] + (valid ? enc : 0), "equity recurrence mismatch");
+  }
+  return eoff;
+}
+
+// ---- commit: publish a salted hash of the padded trade log ----
+export circuit commit(): [] {
+  const trades = tradeLog();
+  const salt = commitmentSalt();
+  commitment = disclose(persistentHash<CommitPayload>(CommitPayload { trades: trades, salt: salt }));
+}
+
+// ---- proveNetPnL: prove net P&L >= minNetDeciPips (deci-pips), without revealing trades ----
+export circuit proveNetPnL(minNetDeciPips: Uint<32>): [] {
+  const trades = tradeLog();
+  const salt = commitmentSalt();
+  assertCommitted(trades, salt);
+
+  const eoff = verifiedEquity(trades);
+  const offset = 100000 as Uint<64>;
+
+  // net = eoff[32] - OFFSET.  net >= T  <=>  eoff[32] >= OFFSET + T.
+  assert(eoff[32] >= offset + (minNetDeciPips as Uint<64>), "net PnL below claimed threshold");
+
+  netPnlProven = true;
+  netPnlThresholdDeciPips = disclose(minNetDeciPips);
+}
+
+// ---- proveWinRate: prove win rate >= minWinRatePct percent, without revealing trades ----
+export circuit proveWinRate(minWinRatePct: Uint<32>): [] {
+  const trades = tradeLog();
+  const salt = commitmentSalt();
+  assertCommitted(trades, salt);
+
+  const cValid = cumValid();
+  const cWins = cumWins();
+  const bias = 10000 as Uint<64>;
+
+  assert(cValid[0] == 0, "cumValid baseline must be zero");
+  assert(cWins[0] == 0, "cumWins baseline must be zero");
+  for (const i of 0..32) {
+    const enc = trades[i].pnlEnc as Uint<64>;
+    const valid = trades[i].valid;
+    const isWin = valid && (enc > bias); // a win is a valid trade with positive P&L (pnlEnc > BIAS)
+    assert(cValid[i + 1] == cValid[i] + (valid ? 1 : 0), "cumValid recurrence mismatch");
+    assert(cWins[i + 1] == cWins[i] + (isWin ? 1 : 0), "cumWins recurrence mismatch");
+  }
+
+  // wins / total >= W/100  <=>  wins*100 >= W*total   (no division)
+  assert(cWins[32] * (100 as Uint<64>) >= (minWinRatePct as Uint<64>) * cValid[32],
+         "win rate below claimed threshold");
+
+  winRateProven = true;
+  winRateThresholdPct = disclose(minWinRatePct);
+}
+
+// ---- proveMaxDrawdown: prove max peak-to-trough drawdown <= maxDdDeciPips, without revealing trades ----
+export circuit proveMaxDrawdown(maxDdDeciPips: Uint<32>): [] {
+  const trades = tradeLog();
+  const salt = commitmentSalt();
+  assertCommitted(trades, salt);
+
+  const eoff = verifiedEquity(trades);
+  const poff = peakOff();
+  const dthr = maxDdDeciPips as Uint<64>;
+
+  assert(poff[0] == eoff[0], "peak baseline must equal equity baseline");
+  for (const i of 0..32) {
+    // running high-water mark: poff[i+1] = max(poff[i], eoff[i+1])
+    assert(poff[i + 1] == (eoff[i + 1] > poff[i] ? eoff[i + 1] : poff[i]), "peak recurrence mismatch");
+    // drawdown at this point = poff[i+1] - eoff[i+1] <= D  <=>  poff[i+1] <= eoff[i+1] + D  (no subtraction)
+    assert(poff[i + 1] <= eoff[i + 1] + dthr, "max drawdown exceeds claimed threshold");
+  }
+
+  maxDrawdownProven = true;
+  maxDrawdownThresholdDeciPips = disclose(maxDdDeciPips);
+}
