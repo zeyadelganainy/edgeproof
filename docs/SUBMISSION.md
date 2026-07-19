@@ -14,74 +14,124 @@
 Prove your trading track record on Midnight with zero-knowledge proofs — win rate, net P&L, drawdown —
 without revealing a single trade. Only the proof is public; your strategy stays private.
 
-## Full description
-Traders can't prove they're profitable without handing over their trade history — and that history *is*
-their edge. EdgeProof breaks the paradox: commit a private trade log on Midnight, then generate
-zero-knowledge proofs of threshold claims — **net PnL positive**, **win rate ≥ X%**, **max drawdown ≤ Y
-pips** — that anyone can verify on-chain, while the individual trades never leave the trader's machine.
-The output is a shareable, on-chain-verified performance card.
+---
 
-## The problem
-To raise capital, get a prop-firm allocation, or sell a signal service, a trader has to prove a track
-record. The only accepted proof today is the raw trade history — which leaks the strategy. So honest
-traders either over-share or aren't believed.
+## About the project (paste into the Devpost "About the project" field — Markdown + LaTeX)
 
-## What it does
-- **Commit** a private, padded 32-trade log as a salted `persistentHash` (SHA-256) on the ledger.
-- **Prove** three threshold claims in zero-knowledge, each bound to that commitment (no cherry-picking a
-  different log per claim). Each proof is its own on-chain transaction.
-- **Verify** — anyone reads the contract's ledger and sees only the commitment + the proven claims and
-  thresholds. Never a trade.
-- **Two ways in (web app):** *Check my trades* (load a file locally → preview → get a copy-paste publish
-  command; the file never uploads) and *Look up a contract* (read any EdgeProof card straight from the
-  Midnight indexer).
-- **Bring your own trades:** a TradingView "List of Trades" CSV adapter maps a real export into the
-  canonical schema, then the same deploy-and-prove pipeline runs on it.
+### Inspiration
 
-## How we built it — Midnight's three-layer model
+Every trader hits the same wall. To raise capital, land a prop-firm allocation, or sell a signal
+service, you have to prove you're profitable — and the only proof anyone accepts is your raw trade
+history. But that history **is** your edge. Hand it over and you've leaked the strategy; keep it private
+and nobody believes your numbers.
+
+I wanted to break that paradox: **prove the claims about a track record without revealing the trades
+behind them.** Midnight — a chain built for private smart contracts with zero-knowledge proofs — was the
+natural place to do it.
+
+### What it does
+
+EdgeProof lets a trader commit a private trade log on-chain and generate zero-knowledge proofs of
+threshold claims:
+
+- **Net P&L is positive**
+- **Win rate ≥ X%**
+- **Max drawdown ≤ Y pips**
+
+Anyone can verify these on the public ledger, but the individual trades never leave the trader's machine.
+What lands publicly is only a salted commitment and the proven claims. The result is a shareable,
+on-chain-verified performance card. The web app has two doors: *Check my trades* (preview a trade file
+entirely in your browser) and *Look up a contract* (read anyone's verified card straight from the ledger).
+
+### How I built it
+
+Midnight's model is three layers, and EdgeProof uses all three:
+
 | Layer | What lives here |
 |---|---|
-| **Private state** (TypeScript witness) | the 32-trade log + a commitment salt — never leaves the prover |
-| **Compact circuit** | computes the metric over the log, asserts the threshold, discloses only what's public |
-| **Public ledger** | a salted `persistentHash` commitment + the proven claims and their thresholds |
+| **Private state** (TypeScript witness) | the padded 32-trade log + a commitment salt — never leaves the prover |
+| **Compact circuit** | computes each metric, asserts the threshold, discloses only what's public |
+| **Public ledger** | a salted `persistentHash` commitment + the proven flags and thresholds |
 
-Every claim circuit **first** asserts `persistentHash(trades, salt) == commitment`, binding all claims to
-one committed log.
+Every claim circuit **first** asserts
 
-**Engineered around real Compact constraints:**
-- **No signed integers** → P&L stored unsigned as deci-pips with a bias; equity carried in an
-  `OFFSET`-biased running total; subtractions rearranged into additions to avoid underflow.
-- **No mutable loop accumulators** (`let` is reserved) → every reduction is a **witnessed prefix array**
-  whose recurrence is verified in-circuit (one assertion per index). This also keeps proofs cheap.
-- **`Field` has no ordering** → comparisons use `Uint<64>`.
-- **Max drawdown avoids division** → `peak ≤ equity + D` at every point instead of `(peak−equity)/peak`.
+$$H(\text{trades} \,\|\, \text{salt}) = \text{commitment}$$
 
-**Stack:** Compact 0.30.0 · midnight-js 4.x · proof-server 8.0.3 · React 19 + Vite (in-browser ledger
-decode via the on-chain WASM, no server).
+so all three claims are bound to one committed log — you can't cherry-pick a different history per claim.
 
-## Accomplishments (all verified this session)
+The CLI deploys the contract and generates a real proof per claim (each its own transaction), then reads
+the card back. The React app decodes the ledger in-browser via Midnight's WASM — no server. A TradingView
+"List of Trades" CSV adapter maps a real export into the canonical schema, so it works on actual trades,
+not just demo data.
+
+### The ZK engineering (my favorite part)
+
+Compact has real constraints, and designing around them was the interesting work.
+
+**No signed integers.** P&L can be negative, so I store it unsigned with a bias,
+$\text{pnlEnc} = \text{pnl}_{\text{decipips}} + \text{BIAS}$, and rearrange every comparison so nothing
+underflows. "Net profitable" becomes
+
+$$\sum_i \text{pnlEnc}_i \;>\; \text{total} \cdot \text{BIAS}.$$
+
+Win rate avoids division entirely:
+
+$$\text{wins} \cdot 100 \;\ge\; 50 \cdot \text{total}.$$
+
+**Max drawdown without division.** The textbook drawdown is
+$\frac{\text{peak}-\text{equity}}{\text{peak}} \le D$, but division and a possibly-non-positive
+denominator are both landmines in a circuit. So I rewrote it as the equivalent unsigned-safe inequality,
+checked at every point on the equity curve:
+
+$$\text{peak}_i \;\le\; \text{equity}_i + D.$$
+
+**No mutable loop accumulators** (`let` is a reserved keyword). Instead of accumulating in a loop, I
+*witness* the running prefix arrays (equity and peak) and have the circuit verify their recurrence — one
+assertion per index. The heavy arithmetic happens in the witness; the circuit only checks it. That keeps
+proofs cheap: the 32-trade claim circuits prove in about the same time as a trivial counter (~24 s each).
+
+### What I learned
+
+- How Midnight's *private-state → circuit → ledger* model actually fits together, and how to think in
+  terms of what's **disclosed** versus what stays **witnessed**.
+- A genuinely new mental model for arithmetic: with no signed ints, no division, and no mutable
+  accumulators, you express everything as unsigned inequalities and witness-verified recurrences. That
+  "prove it in the witness, check it in the circuit" pattern was the unlock.
+- That proof time is a first-class design constraint — I measured it for every circuit from the start.
+
+### Challenges I ran into
+
+The contract, the proofs, and the browser card all came together on a local Midnight stack — **9/9 tests,
+three verified claims, a losing log correctly *rejected* by the same circuit, and real imported trades**
+all the way to a verified card. The wall was **deploying to public Preprod.**
+
+It ran out of memory — twice. First the WSL VM hit its ~11 GB cap ("external memory pressure"); I raised
+it to 16 GB + 16 GB swap. Then Node's V8 heap capped out at 8 GB; I raised `--max-old-space-size` to
+13 GB. That took the deploy from dying at ~18 minutes to running for *hours* — but it exposed the real
+ceiling: **compute, not memory.** Preprod's initial full-history shielded-wallet sync is CPU-bound
+(pinned at ~500% CPU, with no progress readout), and it hadn't finished after 4+ hours on my machine.
+
+So I made an honest call. Everything demoed runs on the local **Standalone** stack — real deploys, real ZK
+proofs, real ledger reads — and I documented the Preprod attempt exactly as it happened. A single
+successful Preprod deploy would persist the contract forever (the app already reads any Preprod contract
+via the public indexer); it just needs a faster machine or wallet-state persistence between runs. I'd
+rather ship something true than claim "live on testnet" over a run that never landed.
+
+### What's next
+
+- One Preprod deploy on a beefier machine (or caching wallet sync state) to light up a public example card.
+- More ingest adapters and broker-binding — tie a claim to a *verified* account (e.g. an agent
+  auto-committing real fills), not just a file.
+- Move proving into the browser so the whole flow is wallet-signed and in-page.
+
+---
+
+## Accomplishments (quick factual reference)
 - **9/9** contract Simulator tests (each claim: proves-on-pass, rejects-on-fail, commitment-bound).
-- **Deploy + prove all 3 claims** on a local Midnight stack → verified card (~22–24s per proof).
+- **Deploy + prove all 3 claims** on a local Midnight stack → verified card (~22–24 s per proof).
 - **Soundness:** the same circuit **rejects** a losing log asked to prove profit (assertion fires in the prover).
 - **Bring-your-own-trades:** TradingView CSV → adapter → `--file` → verified `[IMPORTED]` card, end-to-end.
 - **Public web app** deployed (two-path flow; browser reads the ledger with no server).
-
-## Challenges (honest)
-Getting a **public Preprod** deploy to run locally was the hard part. It OOM'd in two tiers: the WSL VM's
-~11 GB cap ("external memory pressure"), then Node's 8 GB V8 heap. Raising the VM to **16 GB + 16 GB swap**
-and the heap to **13 GB** cleared both — the deploy went from dying at ~18 min to running for hours. The
-remaining wall is **compute, not memory**: Preprod's initial full-history shielded-wallet sync is
-CPU-bound (~500% CPU, no progress readout) and did not finish after **4+ hours** on this machine. A single
-successful Preprod deploy would persist the contract permanently; the app already reads any Preprod
-contract via the public indexer. The reliable on-chain path shown in the demo is the local **Standalone**
-stack — real deploys, real proofs, real reads.
-
-## What's next
-- One Preprod deploy on a faster box (or wallet-state persistence between runs) → lights up the public
-  "see a proven example" card.
-- More ingest adapters + broker-binding (tie a claim to a *verified* account, e.g. an Alpaca agent
-  auto-committing real fills).
-- Browser-side proving (today the browser reads on-chain and the CLI proves locally).
 
 ## Built with
 `midnight` · `compact` · `typescript` · `react` · `vite` · `zero-knowledge-proofs` · `docker` · `vercel`
@@ -91,12 +141,10 @@ stack — real deploys, real proofs, real reads.
 ## Submission checklist
 - [x] Public GitHub repo (no secrets — verified `.secrets/` untracked, seed absent)
 - [x] README with problem, architecture, ZK engineering, reproduce steps
-- [x] Web app deployed publicly (Vercel)
+- [x] Web app deployed publicly (Vercel) — https://edgeproof-seven.vercel.app/
 - [x] 9/9 contract tests green; deploy + prove + soundness + BYO-trades verified
 - [x] Honest Preprod writeup (README + demo script)
 - [x] Record the ~2-min video (`docs/demo-script.md`)
-- [ ] **Redeploy the site** so the live URL matches the video (Lace removed, new title): `cd ui && npx vercel deploy --prod`
 - [ ] **Upload the video** (YouTube unlisted / Vimeo) and paste its link in the Links section above
-- [ ] Put the **Vercel production domain** as the Devpost "Try it" link
-- [ ] Fill Devpost fields (paste sections above: pitch / problem / what it does / how / challenges / next)
+- [ ] Fill Devpost: pitch (≤200), About-the-project story, Built with, links
 - [ ] Submit before the deadline
