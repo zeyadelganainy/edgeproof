@@ -4,14 +4,17 @@
 **Tagline:** Prove your trading track record without revealing a single trade.
 
 ## Links
-- **Live app:** https://edgeproof-62xakoxxk-zeyadelganainys-projects.vercel.app/
-  *(use your Vercel **production** domain — Dashboard → edgeproof → Domains — as the canonical submission link)*
+- **Live app:** https://edgeproof-seven.vercel.app/
 - **Code:** https://github.com/zeyadelganainy/edgeproof
-- **Demo video:** _(add link — see `docs/demo-script.md` for the 2-min script)_
+- **Demo video:** _(add link — see `docs/demo-script.md` for the script)_
 
 ---
 
-## Elevator pitch
+## Elevator pitch (≤200 chars — paste into the Devpost pitch field)
+Prove your trading track record on Midnight with zero-knowledge proofs — win rate, net P&L, drawdown —
+without revealing a single trade. Only the proof is public; your strategy stays private.
+
+## Full description
 Traders can't prove they're profitable without handing over their trade history — and that history *is*
 their edge. EdgeProof breaks the paradox: commit a private trade log on Midnight, then generate
 zero-knowledge proofs of threshold claims — **net PnL positive**, **win rate ≥ X%**, **max drawdown ≤ Y
@@ -54,7 +57,7 @@ one committed log.
 - **Max drawdown avoids division** → `peak ≤ equity + D` at every point instead of `(peak−equity)/peak`.
 
 **Stack:** Compact 0.30.0 · midnight-js 4.x · proof-server 8.0.3 · React 19 + Vite (in-browser ledger
-decode via the on-chain WASM) · Lace dapp-connector.
+decode via the on-chain WASM, no server).
 
 ## Accomplishments (all verified this session)
 - **9/9** contract Simulator tests (each claim: proves-on-pass, rejects-on-fail, commitment-bound).
@@ -91,7 +94,9 @@ stack — real deploys, real proofs, real reads.
 - [x] Web app deployed publicly (Vercel)
 - [x] 9/9 contract tests green; deploy + prove + soundness + BYO-trades verified
 - [x] Honest Preprod writeup (README + demo script)
-- [ ] **Record the 2-min video** (`docs/demo-script.md`) and add the link above
+- [x] Record the ~2-min video (`docs/demo-script.md`)
+- [ ] **Redeploy the site** so the live URL matches the video (Lace removed, new title): `cd ui && npx vercel deploy --prod`
+- [ ] **Upload the video** (YouTube unlisted / Vimeo) and paste its link in the Links section above
 - [ ] Put the **Vercel production domain** as the Devpost "Try it" link
 - [ ] Fill Devpost fields (paste sections above: pitch / problem / what it does / how / challenges / next)
 - [ ] Submit before the deadline

@@ -2,6 +2,8 @@
 
 **Prove your trading track record without revealing a single trade.**
 
+**[▶ Live app](https://edgeproof-seven.vercel.app/)** · see [`docs/demo-script.md`](docs/demo-script.md) for the demo walkthrough
+
 EdgeProof is a confidential-DeFi dApp on [Midnight](https://midnight.network). A trader commits a
 private trade log on-chain, then generates zero-knowledge proofs of threshold performance claims —
 **net PnL positive**, **win rate ≥ X%**, **max drawdown ≤ Y pips** — that anyone can verify on-chain,
@@ -85,12 +87,13 @@ showing your trade count, win rate, net, and drawdown, and which claims are prov
 `ui/` is a Vite + React app (Midnight's own brand: Outfit, near-black + electric blue, green =
 verified). It:
 
+- **Two ways in** — *Check my trades* previews a trade file entirely in the browser (nothing uploaded);
+  *Look up a contract* reads its verified card from the ledger.
 - **Reads the card live from the chain** — `indexerPublicDataProvider.queryContractState(addr)` →
   `EdgeProof.ledger(...)` decoded in-browser via the on-chain WASM (no server), so the card is the
   real on-chain state: commitment, the three verified claims, and their thresholds.
-- **Connects Lace** via the Midnight `dapp-connector` (auto-detecting the wallet's network).
-- Shows each claim's **settlement transaction** (copyable) and a **how-to-verify** panel, so anyone
-  can check it independently.
+- Enriches each claim with its **settlement transaction** (copyable) from the CLI proof receipt (the
+  ledger doesn't store claim→tx), plus a **how-to-verify** panel, so anyone can check it independently.
 
 ```bash
 cd ui && npm run dev        # http://localhost:5173
@@ -161,7 +164,7 @@ npm --workspace cli run standalone-fail            # same circuit rejects the lo
 npm run adapt:tradingview -- ./my-export.csv ./data/my-trades.json --symbol GBPUSD
 npm --workspace cli run standalone -- --file ./data/my-trades.json
 
-# The browser performance card (live on-chain read + Lace + file preview):
+# The browser performance card (two-path flow: live on-chain read + local file preview):
 cd ui && npm run dev                 # http://localhost:5173
 ```
 
@@ -180,7 +183,7 @@ edgeproof/
     src/run.ts                       # shared runner: --file, thresholds, graceful per-claim proving
     src/{standalone,preprod}.ts      # network entry points
     standalone.yml                   # local node + indexer + proof server
-  ui/                                # @edgeproof/ui (Vite/React card: live ledger read, Lace, file preview)
+  ui/                                # @edgeproof/ui (Vite/React two-path card: live ledger read + file preview)
   scripts/generate-dataset.ts        # seeded synthetic dataset generator (single source of truth)
   scripts/adapters/tradingview-csv.ts# TradingView "List of Trades" CSV -> canonical dataset
   data/{demo_pass,demo_fail}.json    # committed demo datasets
@@ -194,7 +197,7 @@ edgeproof/
 - All three claims, commitment-bound, proven with real ZK proofs and deployed on-chain to a local
   Midnight stack; soundness demonstrated (losing log rejected); 9/9 contract tests.
 - **Bring-your-own-trades**: TradingView-CSV adapter → canonical JSON → `--file` → proven card.
-- **Browser performance card**: live in-browser ledger read + Lace connect + local file preview.
+- **Browser performance card**: two-path flow — live in-browser ledger read (with settlement-tx links) + local file preview.
 
 **Preprod public testnet — attempted, memory-cleared but sync-time-bound.** The same contract and
 proving are verified locally, and a live Preprod path is wired (`npm --workspace cli run preprod`
